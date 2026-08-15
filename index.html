@@ -38,68 +38,36 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: space-between;
-      padding: 8px 12px 16px 12px;
+      justify-content: flex-start;
+      padding: 8px 12px 12px 12px;
     }
 
-    /* Шапка с кнопками управления */
     .header {
       width: 100%;
-      max-width: 420px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 4px 0;
+      max-width: 400px;
+      text-align: center;
+      padding: 4px 0 8px 0;
     }
 
-    .header-title h1 {
-      font-size: 1.05rem;
+    .header h1 {
+      font-size: 1rem;
       font-weight: 700;
     }
 
-    .header-title p {
-      font-size: 0.7rem;
-      color: #a1a1aa;
-    }
-
-    .icon-btn {
-      background: var(--card-bg);
-      border: 1px solid #3f3f46;
-      color: #fff;
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 1.2rem;
-    }
-
-    .icon-btn:active {
-      scale: 0.95;
-    }
-
-    /* Индикатор режима рисования */
     .draw-indicator {
       display: none;
       background: #ef4444;
       color: #fff;
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       font-weight: 700;
       padding: 2px 8px;
-      border-radius: 12px;
+      border-radius: 10px;
       text-transform: uppercase;
-      animation: pulse 1.5s infinite;
+      margin-top: 2px;
     }
 
     .draw-indicator.active {
       display: inline-block;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
     }
 
     /* Поле */
@@ -108,7 +76,7 @@
       width: 100%;
       max-width: 400px;
       flex-grow: 1;
-      max-height: calc(100dvh - 75px);
+      max-height: calc(100dvh - 55px);
       aspect-ratio: 2 / 3;
       background-color: var(--pitch-green);
       border-radius: 16px;
@@ -124,6 +92,41 @@
       width: 100%;
       height: 100%;
       pointer-events: none;
+    }
+
+    /* Перетаскиваемые кнопки управления */
+    .floating-btn {
+      position: absolute;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: rgba(39, 39, 42, 0.88);
+      backdrop-filter: blur(8px);
+      border: 1.5px solid rgba(255, 255, 255, 0.3);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      cursor: grab;
+      z-index: 30;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+      touch-action: none;
+    }
+
+    .floating-btn:active {
+      cursor: grabbing;
+      scale: 0.95;
+    }
+
+    #openMenuBtn {
+      left: 12px;
+      bottom: 12px;
+    }
+
+    #toggleDrawBtn {
+      right: 12px;
+      bottom: 12px;
     }
 
     /* Холст для рисования */
@@ -142,7 +145,7 @@
       cursor: crosshair;
     }
 
-    /* Фишка игрока */
+    /* Фишки игроков */
     .player-chip {
       position: absolute;
       transform: translate(-50%, -50%);
@@ -224,23 +227,24 @@
       text-overflow: ellipsis;
     }
 
-    /* Мяч */
+    /* Классический футбольний мяч */
     .ball-chip {
       position: absolute;
       transform: translate(-50%, -50%);
-      width: 26px;
-      height: 26px;
-      background: #fff;
-      border-radius: 50%;
+      width: 28px;
+      height: 28px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.1rem;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.6);
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));
       cursor: grab;
       z-index: 3;
       touch-action: none;
-      border: 1px solid #000;
+    }
+
+    .ball-chip:active {
+      cursor: grabbing;
+      scale: 1.05;
     }
 
     /* Боковое меню */
@@ -302,10 +306,6 @@
       border: 1px solid #3f3f46;
     }
 
-    .menu-item:active {
-      background: #27272a;
-    }
-
     .color-picker-group {
       display: flex;
       gap: 8px;
@@ -325,7 +325,7 @@
       scale: 1.1;
     }
 
-    /* Модальное окно редактора игрока */
+    /* Модальное окно */
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -456,17 +456,11 @@
 </head>
 <body>
 
-  <!-- Шапка -->
   <div class="header">
-    <button class="icon-btn" id="openMenuBtn">☰</button>
-    <div class="header-title" style="text-align: center;">
-      <h1>Тактика 5+1</h1>
-      <span class="draw-indicator" id="drawIndicator">Режим рисования</span>
-    </div>
-    <button class="icon-btn" id="toggleDrawBtn">✏️</button>
+    <h1>Тактика 5+1</h1>
+    <span class="draw-indicator" id="drawIndicator">Режим рисования</span>
   </div>
 
-  <!-- Поле -->
   <div class="pitch-container" id="pitch">
     <svg class="pitch-lines" viewBox="0 0 100 150" preserveAspectRatio="none">
       <rect x="0" y="0" width="100" height="150" fill="none" stroke="var(--pitch-lines)" stroke-width="1.5" />
@@ -478,11 +472,12 @@
       <rect x="20" y="128" width="60" height="22" fill="none" stroke="var(--pitch-lines)" stroke-width="1.5" />
     </svg>
 
-    <!-- Холст для рисовки -->
+    <div class="floating-btn" id="openMenuBtn">☰</div>
+    <div class="floating-btn" id="toggleDrawBtn">✏️</div>
+
     <canvas id="drawingCanvas"></canvas>
   </div>
 
-  <!-- Боковое меню -->
   <div class="sidebar-overlay" id="sidebarOverlay">
     <div class="sidebar">
       <div class="sidebar-header">
@@ -515,12 +510,11 @@
       </div>
 
       <div class="menu-item" id="menuResetPositions">
-        <span>🔄 Сбросить фишки</span>
+        <span>🔄 Сбросить позиции</span>
       </div>
     </div>
   </div>
 
-  <!-- Модальное окно редактирования игрока -->
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
       <div class="modal-header">
@@ -562,17 +556,13 @@
   </div>
 
   <script>
-    // 1. Полноэкранный режим Telegram Mini App
     const tg = window.Telegram?.WebApp;
     if (tg) {
       tg.ready();
       tg.expand();
-      if (tg.requestFullscreen) {
-        tg.requestFullscreen();
-      }
+      if (tg.requestFullscreen) tg.requestFullscreen();
     }
 
-    // Состояние приложения
     let players = [
       { id: 1, isGk: true,  x: 50, y: 88, firstName: 'Игорь', lastName: 'Акинфеев', number: 1, photo: '' },
       { id: 2, isGk: false, x: 25, y: 70, firstName: 'Игорь', lastName: 'Дивеев', number: 3, photo: '' },
@@ -591,7 +581,6 @@
     const canvas = document.getElementById('drawingCanvas');
     const ctx = canvas.getContext('2d');
 
-    // Настройка разрешения Canvas
     function initCanvasSize() {
       const rect = pitch.getBoundingClientRect();
       canvas.width = rect.width;
@@ -599,11 +588,9 @@
     }
     window.addEventListener('resize', initCanvasSize);
 
-    // Отрисовка фишек игроков и мяча
     function renderFieldElements() {
       document.querySelectorAll('.player-chip, .ball-chip').forEach(el => el.remove());
 
-      // 1. Отрисовка игроков
       players.forEach(p => {
         const chip = document.createElement('div');
         chip.className = `player-chip ${p.isGk ? 'is-gk' : ''}`;
@@ -626,11 +613,33 @@
         pitch.appendChild(chip);
       });
 
-      // 2. Отрисовка мяча
       if (ball.active) {
         const ballEl = document.createElement('div');
         ballEl.className = 'ball-chip';
-        ballEl.innerText = '⚽';
+        // Векторная графика классического футбольні мяча Telstar
+        ballEl.innerHTML = `
+          <svg viewBox="0 0 100 100" width="100%" height="100%">
+            <defs>
+              <clipPath id="ballClip">
+                <circle cx="50" cy="50" r="47"/>
+              </clipPath>
+            </defs>
+            <circle cx="50" cy="50" r="47" fill="#ffffff" stroke="#18181b" stroke-width="4"/>
+            <g clip-path="url(#ballClip)">
+              <polygon points="50,30 68,43 61,65 39,65 32,43" fill="#18181b"/>
+              <line x1="50" y1="30" x2="50" y2="0" stroke="#18181b" stroke-width="4"/>
+              <line x1="68" y1="43" x2="98" y2="33" stroke="#18181b" stroke-width="4"/>
+              <line x1="61" y1="65" x2="80" y2="98" stroke="#18181b" stroke-width="4"/>
+              <line x1="39" y1="65" x2="20" y2="98" stroke="#18181b" stroke-width="4"/>
+              <line x1="32" y1="43" x2="2" y2="33" stroke="#18181b" stroke-width="4"/>
+              <polygon points="35,0 65,0 50,15" fill="#18181b"/>
+              <polygon points="100,15 100,48 83,38" fill="#18181b"/>
+              <polygon points="88,100 58,100 70,80" fill="#18181b"/>
+              <polygon points="12,100 42,100 30,80" fill="#18181b"/>
+              <polygon points="0,15 0,48 17,38" fill="#18181b"/>
+            </g>
+          </svg>
+        `;
         ballEl.style.left = `${ball.x}%`;
         ballEl.style.top = `${ball.y}%`;
 
@@ -639,14 +648,13 @@
       }
     }
 
-    // Универсальная обработка перетаскивания (Drag & Drop)
     function setupDragAndClick(element, itemState, onClickCallback) {
       let isDragging = false;
       let startX = 0, startY = 0;
       let moved = false;
 
       element.addEventListener('pointerdown', (e) => {
-        if (isDrawingMode) return; // В режиме рисования фишки заблокированы
+        if (isDrawingMode) return;
         isDragging = true;
         moved = false;
         startX = e.clientX;
@@ -681,9 +689,55 @@
       });
     }
 
-    // Логика рисования на холсте (Canvas)
-    let isDrawing = false;
+    function makeFloatingButtonDraggable(btn, onSingleTap) {
+      let isDragging = false;
+      let startX = 0, startY = 0;
+      let initLeft = 0, initTop = 0;
+      let moved = false;
 
+      btn.addEventListener('pointerdown', (e) => {
+        isDragging = true;
+        moved = false;
+        startX = e.clientX;
+        startY = e.clientY;
+
+        const rect = btn.getBoundingClientRect();
+        const parentRect = pitch.getBoundingClientRect();
+        initLeft = rect.left - parentRect.left;
+        initTop = rect.top - parentRect.top;
+
+        btn.setPointerCapture(e.pointerId);
+      });
+
+      btn.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+
+        if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
+
+        const parentRect = pitch.getBoundingClientRect();
+        let newLeft = initLeft + dx;
+        let newTop = initTop + dy;
+
+        newLeft = Math.max(0, Math.min(parentRect.width - btn.offsetWidth, newLeft));
+        newTop = Math.max(0, Math.min(parentRect.height - btn.offsetHeight, newTop));
+
+        btn.style.left = `${newLeft}px`;
+        btn.style.top = `${newTop}px`;
+        btn.style.bottom = 'auto';
+        btn.style.right = 'auto';
+      });
+
+      btn.addEventListener('pointerup', (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        btn.releasePointerCapture(e.pointerId);
+        if (!moved && onSingleTap) onSingleTap();
+      });
+    }
+
+    let isDrawing = false;
     function startDrawing(e) {
       if (!isDrawingMode) return;
       isDrawing = true;
@@ -703,19 +757,14 @@
       ctx.stroke();
     }
 
-    function stopDrawing() {
-      isDrawing = false;
-    }
+    function stopDrawing() { isDrawing = false; }
 
     canvas.addEventListener('pointerdown', startDrawing);
     canvas.addEventListener('pointermove', draw);
     canvas.addEventListener('pointerup', stopDrawing);
 
-    function clearCanvas() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
+    function clearCanvas() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
 
-    // Переключение режима рисования
     function setDrawingMode(active) {
       isDrawingMode = active;
       document.getElementById('drawCheckbox').checked = active;
@@ -723,25 +772,23 @@
       document.getElementById('drawIndicator').classList.toggle('active', active);
     }
 
-    document.getElementById('toggleDrawBtn').addEventListener('click', () => setDrawingMode(!isDrawingMode));
-    document.getElementById('menuToggleDraw').addEventListener('click', () => setDrawingMode(!isDrawingMode));
-
-    // Управление боковым меню
+    const openMenuBtn = document.getElementById('openMenuBtn');
+    const toggleDrawBtn = document.getElementById('toggleDrawBtn');
     const sidebarOverlay = document.getElementById('sidebarOverlay');
-    document.getElementById('openMenuBtn').addEventListener('click', () => sidebarOverlay.classList.add('active'));
-    document.getElementById('closeSidebar').addEventListener('click', () => sidebarOverlay.classList.remove('active'));
-    sidebarOverlay.addEventListener('click', (e) => {
-      if (e.target === sidebarOverlay) sidebarOverlay.classList.remove('active');
-    });
 
-    // Управление мячом
+    makeFloatingButtonDraggable(openMenuBtn, () => sidebarOverlay.classList.add('active'));
+    makeFloatingButtonDraggable(toggleDrawBtn, () => setDrawingMode(!isDrawingMode));
+
+    document.getElementById('closeSidebar').addEventListener('click', () => sidebarOverlay.classList.remove('active'));
+    sidebarOverlay.addEventListener('click', (e) => { if (e.target === sidebarOverlay) sidebarOverlay.classList.remove('active'); });
+
+    document.getElementById('menuToggleDraw').addEventListener('click', () => setDrawingMode(!isDrawingMode));
     document.getElementById('menuToggleBall').addEventListener('click', () => {
       ball.active = !ball.active;
       document.getElementById('ballCheckbox').checked = ball.active;
       renderFieldElements();
     });
 
-    // Очистка и сброс
     document.getElementById('menuClearCanvas').addEventListener('click', () => {
       clearCanvas();
       sidebarOverlay.classList.remove('active');
@@ -754,11 +801,14 @@
       ];
       players.forEach((p, i) => { p.x = defaultCoords[i].x; p.y = defaultCoords[i].y; });
       ball.x = 50; ball.y = 50;
+
+      openMenuBtn.style.left = '12px'; openMenuBtn.style.bottom = '12px'; openMenuBtn.style.top = 'auto'; openMenuBtn.style.right = 'auto';
+      toggleDrawBtn.style.right = '12px'; toggleDrawBtn.style.bottom = '12px'; toggleDrawBtn.style.top = 'auto'; toggleDrawBtn.style.left = 'auto';
+
       renderFieldElements();
       sidebarOverlay.classList.remove('active');
     });
 
-    // Выбор цвета кисти
     document.querySelectorAll('.color-dot').forEach(dot => {
       dot.addEventListener('click', (e) => {
         document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
@@ -767,7 +817,6 @@
       });
     });
 
-    // Работа с модальным окном игрока и фото
     const modalOverlay = document.getElementById('modalOverlay');
     const playerForm = document.getElementById('playerForm');
     const inputFilePhoto = document.getElementById('inputFilePhoto');
@@ -848,7 +897,6 @@
       }
     });
 
-    // Первичная инициализация
     setTimeout(initCanvasSize, 100);
     renderFieldElements();
   </script>
