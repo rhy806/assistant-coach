@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Тактика 5+1</title>
+  <title>Тактика 5+1 с фото</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
@@ -11,8 +11,9 @@
       --card-bg: #27272a;
       --text-color: #f4f4f5;
       --accent-color: #22c55e;
+      --gk-color: #eab308;
       --pitch-green: #15803d;
-      --pitch-lines: rgba(255, 255, 255, 0.4);
+      --pitch-lines: rgba(255, 255, 255, 0.45);
     }
 
     * {
@@ -32,35 +33,35 @@
       align-items: center;
       min-height: 100vh;
       padding: 12px;
-      touch-action: none; /* Запрет скролла страницы при перетаскивании */
+      touch-action: manipulation;
     }
 
     .header {
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       text-align: center;
     }
 
     .header h1 {
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       font-weight: 700;
     }
 
     .header p {
       font-size: 0.75rem;
       color: #a1a1aa;
-      margin-top: 2px;
     }
 
     .pitch-container {
       position: relative;
       width: 100%;
-      max-width: 420px;
+      max-width: 400px;
       aspect-ratio: 2 / 3;
       background-color: var(--pitch-green);
       border-radius: 16px;
-      border: 3px solid rgba(255, 255, 255, 0.6);
+      border: 3px solid rgba(255, 255, 255, 0.7);
       overflow: hidden;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      touch-action: none;
     }
 
     .pitch-lines {
@@ -95,7 +96,7 @@
       border-radius: 50%;
       background: #3f3f46;
       border: 2.5px solid #ffffff;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -103,34 +104,19 @@
       pointer-events: none;
     }
 
-    .gk-chip .chip-avatar-wrapper {
-      border-color: #f59e0b; /* Оранжевый ободок для вратаря */
+    .player-chip.is-gk .chip-avatar-wrapper {
+      border-color: var(--gk-color);
     }
 
     .chip-avatar {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      pointer-events: none;
     }
 
-    .chip-number {
-      position: absolute;
-      bottom: -2px;
-      right: -2px;
-      background: var(--accent-color);
-      color: #000;
-      font-weight: 800;
-      font-size: 0.65rem;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 1.5px solid #fff;
-    }
-
-    .chip-name {
+    /* Новый контейнер для лейбла игрока */
+    .chip-label {
       margin-top: 4px;
       background: rgba(0, 0, 0, 0.8);
       color: #fff;
@@ -139,11 +125,36 @@
       padding: 2px 6px;
       border-radius: 4px;
       white-space: nowrap;
-      max-width: 75px;
+      display: flex;
+      align-items: center;
+      gap: 4px; /* Отступ между номером и именем */
+      max-width: 90px;
+      pointer-events: none;
+    }
+
+    /* Новое оформление номера внутри лейбла */
+    .chip-number {
+      font-weight: 800;
+      color: #000;
+      background: var(--accent-color);
+      border-radius: 50%;
+      width: 14px;
+      height: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.55rem;
+      border: 1px solid #fff;
+    }
+
+    .player-chip.is-gk .chip-number {
+      background: var(--gk-color);
+    }
+
+    .chip-name {
       overflow: hidden;
       text-overflow: ellipsis;
-      text-align: center;
-      pointer-events: none;
+      text-align: left;
     }
 
     /* Модальное окно */
@@ -187,6 +198,10 @@
       margin-bottom: 16px;
     }
 
+    .modal-header h2 {
+      font-size: 1.1rem;
+    }
+
     .close-btn {
       background: none;
       border: none;
@@ -222,6 +237,55 @@
       border-color: var(--accent-color);
     }
 
+    /* Управление фото в редакторе */
+    .photo-input-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .photo-preview {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: 2px solid #3f3f46;
+      background: #18181b;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .photo-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .photo-btns {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 10px;
+      background: #3f3f46;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .action-btn:active {
+      opacity: 0.8;
+    }
+
     .save-btn {
       width: 100%;
       padding: 12px;
@@ -238,11 +302,12 @@
 <body>
 
   <div class="header">
-    <h1>Состав 5+1</h1>
-    <p>Перетаскивайте фишки или нажмите для изменения данных</p>
+    <h1>Тактическая схема (5 + 1)</h1>
+    <p>Двигайте фишки • Нажмите для редактирования</p>
   </div>
 
   <div class="pitch-container" id="pitch">
+    <!-- SVG разметка -->
     <svg class="pitch-lines" viewBox="0 0 100 150" preserveAspectRatio="none">
       <rect x="0" y="0" width="100" height="150" fill="none" stroke="var(--pitch-lines)" stroke-width="1.5" />
       <line x1="0" y1="75" x2="100" y2="75" stroke="var(--pitch-lines)" stroke-width="1.5" />
@@ -250,35 +315,47 @@
       <circle cx="50" cy="75" r="1" fill="var(--pitch-lines)" />
       
       <rect x="20" y="0" width="60" height="22" fill="none" stroke="var(--pitch-lines)" stroke-width="1.5" />
-      <rect x="35" y="0" width="30" height="8" fill="none" stroke="var(--pitch-lines)" stroke-width="1.5" />
-      
       <rect x="20" y="128" width="60" height="22" fill="none" stroke="var(--pitch-lines)" stroke-width="1.5" />
-      <rect x="35" y="142" width="30" height="8" fill="none" stroke="var(--pitch-lines)" stroke-width="1.5" />
     </svg>
   </div>
 
+  <!-- Модальное окно -->
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
       <div class="modal-header">
-        <h2 id="modalTitle">Редактировать игрока</h2>
+        <h2>Редактировать игрока</h2>
         <button class="close-btn" id="closeModal">&times;</button>
       </div>
       <form id="playerForm">
         <div class="form-group">
+          <label>Фото</label>
+          <div class="photo-input-group">
+            <div class="photo-preview" id="photoPreview">
+              <img src="" alt="preview" id="previewImg" style="display: none;"/>
+              <svg id="placeholderIcon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#52525b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            </div>
+            <div class="photo-btns">
+              <button type="button" class="action-btn" id="selectPhotoBtn">Выбрать</button>
+              <button type="button" class="action-btn" id="removePhotoBtn" style="background: #ef4444; display: none;">Удалить</button>
+            </div>
+            <!-- Скрытый инпут для выбора файла -->
+            <input type="file" id="inputFilePhoto" accept="image/*" style="display: none;" />
+            <!-- Скрытое поле для хранения данных Base64 -->
+            <input type="hidden" id="inputPhotoData" />
+          </div>
+        </div>
+
+        <div class="form-group">
           <label>Имя</label>
-          <input type="text" id="inputFirstName" placeholder="Иван" required />
+          <input type="text" id="inputFirstName" placeholder="Имя" required />
         </div>
         <div class="form-group">
           <label>Фамилия</label>
-          <input type="text" id="inputLastName" placeholder="Иванов" required />
+          <input type="text" id="inputLastName" placeholder="Фамилия" required />
         </div>
         <div class="form-group">
           <label>Игровой номер</label>
-          <input type="number" id="inputNumber" min="1" max="99" placeholder="10" required />
-        </div>
-        <div class="form-group">
-          <label>Ссылка на фото</label>
-          <input type="url" id="inputPhoto" placeholder="https://example.com/photo.jpg" />
+          <input type="number" id="inputNumber" min="1" max="99" placeholder="Номер" required />
         </div>
         <button type="submit" class="save-btn">Сохранить</button>
       </form>
@@ -292,14 +369,13 @@
       tg.expand();
     }
 
-    // Ровно 6 игроков (1 вратарь + 5 полевых)
     let players = [
-      { id: 1, isGk: true,  x: 50, y: 88, firstName: 'Игорь', lastName: 'Акинфеев', number: 35, photo: '' },
-      { id: 2, isGk: false, x: 28, y: 68, firstName: 'Марио', lastName: 'Фернандес', number: 2, photo: '' },
-      { id: 3, isGk: false, x: 72, y: 68, firstName: 'Георгий', lastName: 'Джикия', number: 14, photo: '' },
-      { id: 4, isGk: false, x: 50, y: 48, firstName: 'Александр', lastName: 'Головин', number: 17, photo: '' },
-      { id: 5, isGk: false, x: 28, y: 24, firstName: 'Квинси', lastName: 'Промес', number: 10, photo: '' },
-      { id: 6, isGk: false, x: 72, y: 24, firstName: 'Артем', lastName: 'Дзюба', number: 22, photo: '' }
+      { id: 1, isGk: true,  x: 50, y: 88, firstName: 'Игорь', lastName: 'Акинфеев', number: 1, photo: '' },
+      { id: 2, isGk: false, x: 25, y: 70, firstName: 'Игорь', lastName: 'Дивеев', number: 3, photo: '' },
+      { id: 3, isGk: false, x: 75, y: 70, firstName: 'Георгий', lastName: 'Джикия', number: 14, photo: '' },
+      { id: 4, isGk: false, x: 50, y: 50, firstName: 'Александр', lastName: 'Головин', number: 17, photo: '' },
+      { id: 5, isGk: false, x: 25, y: 25, firstName: 'Квинси', lastName: 'Промес', number: 10, photo: '' },
+      { id: 6, isGk: false, x: 75, y: 25, firstName: 'Алексей', lastName: 'Миранчук', number: 59, photo: '' }
     ];
 
     let selectedPlayerId = null;
@@ -308,88 +384,112 @@
     const closeModalBtn = document.getElementById('closeModal');
     const playerForm = document.getElementById('playerForm');
 
+    // Отрисовка фишек
     function renderPlayers() {
       document.querySelectorAll('.player-chip').forEach(el => el.remove());
 
       players.forEach(p => {
         const chip = document.createElement('div');
-        chip.className = `player-chip ${p.isGk ? 'gk-chip' : ''}`;
+        chip.className = `player-chip ${p.isGk ? 'is-gk' : ''}`;
         chip.style.left = `${p.x}%`;
         chip.style.top = `${p.y}%`;
-        chip.dataset.id = p.id;
 
+        // Генерация аватара по умолчанию, если нет фото
         const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.firstName + ' ' + p.lastName)}&background=3f3f46&color=ffffff`;
 
+        // Измененная HTML-структура: номер убран с аватарки и помещен в chip-label слева от имени
         chip.innerHTML = `
           <div class="chip-avatar-wrapper">
             <img class="chip-avatar" src="${p.photo || defaultAvatar}" alt="photo" onerror="this.src='${defaultAvatar}'" />
-            <div class="chip-number">${p.number}</div>
           </div>
-          <div class="chip-name">${p.lastName || p.firstName}</div>
+          <div class="chip-label">
+            <div class="chip-number">${p.number}</div>
+            <div class="chip-name">${p.lastName || p.firstName}</div>
+          </div>
         `;
 
-        makeDraggable(chip, p);
+        let isDragging = false;
+        let startX = 0, startY = 0;
+        let moved = false;
+
+        chip.addEventListener('pointerdown', (e) => {
+          isDragging = true;
+          moved = false;
+          startX = e.clientX;
+          startY = e.clientY;
+          chip.setPointerCapture(e.pointerId);
+        });
+
+        chip.addEventListener('pointermove', (e) => {
+          if (!isDragging) return;
+          const dx = Math.abs(e.clientX - startX);
+          const dy = Math.abs(e.clientY - startY);
+          if (dx > 4 || dy > 4) moved = true;
+
+          const rect = pitch.getBoundingClientRect();
+          let xPercent = ((e.clientX - rect.left) / rect.width) * 100;
+          let yPercent = ((e.clientY - rect.top) / rect.height) * 100;
+          xPercent = Math.max(5, Math.min(95, xPercent));
+          yPercent = Math.max(5, Math.min(95, yPercent));
+
+          p.x = xPercent;
+          p.y = yPercent;
+          chip.style.left = `${xPercent}%`;
+          chip.style.top = `${yPercent}%`;
+        });
+
+        chip.addEventListener('pointerup', (e) => {
+          if (!isDragging) return;
+          isDragging = false;
+          chip.releasePointerCapture(e.pointerId);
+          if (!moved) openEditModal(p.id);
+        });
+
         pitch.appendChild(chip);
       });
     }
 
-    // Логика Drag-and-Drop и клика
-    function makeDraggable(element, player) {
-      let isDragging = false;
-      let startX = 0;
-      let startY = 0;
-      let hasMoved = false;
+    // Обработка выбора фото
+    const inputFilePhoto = document.getElementById('inputFilePhoto');
+    const inputPhotoData = document.getElementById('inputPhotoData');
+    const previewImg = document.getElementById('previewImg');
+    const placeholderIcon = document.getElementById('placeholderIcon');
+    const removePhotoBtn = document.getElementById('removePhotoBtn');
+    const selectPhotoBtn = document.getElementById('selectPhotoBtn');
 
-      element.addEventListener('pointerdown', (e) => {
-        isDragging = true;
-        hasMoved = false;
-        startX = e.clientX;
-        startY = e.clientY;
-        element.setPointerCapture(e.pointerId);
-      });
+    selectPhotoBtn.addEventListener('click', () => inputFilePhoto.click());
 
-      element.addEventListener('pointermove', (e) => {
-        if (!isDragging) return;
+    inputFilePhoto.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
 
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64String = event.target.result;
+        inputPhotoData.value = base64String;
+        updatePreview(base64String);
+      };
+      reader.readAsDataURL(file); // Читает файл как Base64
+    });
 
-        // Если сдвинулось больше чем на 4px, фиксируем перетаскивание
-        if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
-          hasMoved = true;
-        }
+    removePhotoBtn.addEventListener('click', () => {
+      inputPhotoData.value = '';
+      inputFilePhoto.value = ''; // Сброс инпута файла
+      updatePreview('');
+    });
 
-        if (hasMoved) {
-          const rect = pitch.getBoundingClientRect();
-          let newXPct = ((e.clientX - rect.left) / rect.width) * 100;
-          let newYPct = ((e.clientY - rect.top) / rect.height) * 100;
-
-          // Ограничиваем в пределах поля (от 5% до 95%)
-          newXPct = Math.max(5, Math.min(95, newXPct));
-          newYPct = Math.max(5, Math.min(95, newYPct));
-
-          player.x = newXPct;
-          player.y = newYPct;
-
-          element.style.left = `${newXPct}%`;
-          element.style.top = `${newYPct}%`;
-        }
-      });
-
-      element.addEventListener('pointerup', (e) => {
-        if (!isDragging) return;
-        isDragging = false;
-        element.releasePointerCapture(e.pointerId);
-
-        // Если сдвига не было — считаем это кликом и открываем модалку
-        if (!hasMoved) {
-          openEditModal(player.id);
-        }
-      });
-
-      element.addEventListener('pointercancel', () => {
-        isDragging = false;
-      });
+    function updatePreview(src) {
+      if (src) {
+        previewImg.src = src;
+        previewImg.style.display = 'block';
+        placeholderIcon.style.display = 'none';
+        removePhotoBtn.style.display = 'inline-block';
+      } else {
+        previewImg.src = '';
+        previewImg.style.display = 'none';
+        placeholderIcon.style.display = 'block';
+        removePhotoBtn.style.display = 'none';
+      }
     }
 
     function openEditModal(id) {
@@ -397,12 +497,13 @@
       const player = players.find(p => p.id === id);
       if (!player) return;
 
-      document.getElementById('modalTitle').textContent = player.isGk ? 'Редактировать вратаря' : 'Редактировать игрока';
       document.getElementById('inputFirstName').value = player.firstName;
       document.getElementById('inputLastName').value = player.lastName;
       document.getElementById('inputNumber').value = player.number;
-      document.getElementById('inputPhoto').value = player.photo;
+      inputPhotoData.value = player.photo;
+      inputFilePhoto.value = ''; // Сброс выбранного файла при открытии другого игрока
 
+      updatePreview(player.photo);
       modalOverlay.classList.add('active');
     }
 
@@ -420,12 +521,12 @@
       e.preventDefault();
       if (!selectedPlayerId) return;
 
-      const playerIndex = players.findIndex(p => p.id === selectedPlayerId);
-      if (playerIndex !== -1) {
-        players[playerIndex].firstName = document.getElementById('inputFirstName').value.trim();
-        players[playerIndex].lastName = document.getElementById('inputLastName').value.trim();
-        players[playerIndex].number = parseInt(document.getElementById('inputNumber').value, 10);
-        players[playerIndex].photo = document.getElementById('inputPhoto').value.trim();
+      const idx = players.findIndex(p => p.id === selectedPlayerId);
+      if (idx !== -1) {
+        players[idx].firstName = document.getElementById('inputFirstName').value.trim();
+        players[idx].lastName = document.getElementById('inputLastName').value.trim();
+        players[idx].number = parseInt(document.getElementById('inputNumber').value, 10);
+        players[idx].photo = inputPhotoData.value; // Сохраняем Base64 строку в данные игрока
 
         renderPlayers();
         closeModal();
