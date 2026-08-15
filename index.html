@@ -2,8 +2,8 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Тактика 5+1 с фото</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Тактика 5+1</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
@@ -25,36 +25,90 @@
       -webkit-user-select: none;
     }
 
-    body {
+    html, body {
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
       background-color: var(--bg-color);
       color: var(--text-color);
+    }
+
+    body {
       display: flex;
       flex-direction: column;
       align-items: center;
-      min-height: 100vh;
-      padding: 12px;
-      touch-action: manipulation;
+      justify-content: space-between;
+      padding: 8px 12px 16px 12px;
     }
 
+    /* Шапка с кнопками управления */
     .header {
-      margin-bottom: 10px;
-      text-align: center;
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 0;
     }
 
-    .header h1 {
-      font-size: 1.1rem;
+    .header-title h1 {
+      font-size: 1.05rem;
       font-weight: 700;
     }
 
-    .header p {
-      font-size: 0.75rem;
+    .header-title p {
+      font-size: 0.7rem;
       color: #a1a1aa;
     }
 
+    .icon-btn {
+      background: var(--card-bg);
+      border: 1px solid #3f3f46;
+      color: #fff;
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.2rem;
+    }
+
+    .icon-btn:active {
+      scale: 0.95;
+    }
+
+    /* Индикатор режима рисования */
+    .draw-indicator {
+      display: none;
+      background: #ef4444;
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 12px;
+      text-transform: uppercase;
+      animation: pulse 1.5s infinite;
+    }
+
+    .draw-indicator.active {
+      display: inline-block;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Поле */
     .pitch-container {
       position: relative;
       width: 100%;
       max-width: 400px;
+      flex-grow: 1;
+      max-height: calc(100dvh - 75px);
       aspect-ratio: 2 / 3;
       background-color: var(--pitch-green);
       border-radius: 16px;
@@ -72,7 +126,23 @@
       pointer-events: none;
     }
 
-    /* Элемент фишки игрока */
+    /* Холст для рисования */
+    #drawingCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 5;
+      pointer-events: none;
+      touch-action: none;
+    }
+
+    #drawingCanvas.active {
+      pointer-events: auto;
+      cursor: crosshair;
+    }
+
+    /* Фишка игрока */
     .player-chip {
       position: absolute;
       transform: translate(-50%, -50%);
@@ -86,13 +156,13 @@
 
     .player-chip:active {
       cursor: grabbing;
-      z-index: 10;
+      z-index: 4;
     }
 
     .chip-avatar-wrapper {
       position: relative;
-      width: 48px;
-      height: 48px;
+      width: 46px;
+      height: 46px;
       border-radius: 50%;
       background: #3f3f46;
       border: 2.5px solid #ffffff;
@@ -115,10 +185,9 @@
       pointer-events: none;
     }
 
-    /* Новый контейнер для лейбла игрока */
     .chip-label {
-      margin-top: 4px;
-      background: rgba(0, 0, 0, 0.8);
+      margin-top: 3px;
+      background: rgba(0, 0, 0, 0.85);
       color: #fff;
       font-size: 0.65rem;
       font-weight: 600;
@@ -127,12 +196,11 @@
       white-space: nowrap;
       display: flex;
       align-items: center;
-      gap: 4px; /* Отступ между номером и именем */
+      gap: 4px;
       max-width: 90px;
       pointer-events: none;
     }
 
-    /* Новое оформление номера внутри лейбла */
     .chip-number {
       font-weight: 800;
       color: #000;
@@ -154,10 +222,110 @@
     .chip-name {
       overflow: hidden;
       text-overflow: ellipsis;
-      text-align: left;
     }
 
-    /* Модальное окно */
+    /* Мяч */
+    .ball-chip {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      width: 26px;
+      height: 26px;
+      background: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.6);
+      cursor: grab;
+      z-index: 3;
+      touch-action: none;
+      border: 1px solid #000;
+    }
+
+    /* Боковое меню */
+    .sidebar-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(3px);
+      z-index: 150;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .sidebar-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 280px;
+      height: 100%;
+      background: var(--card-bg);
+      z-index: 160;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      transform: translateX(-100%);
+      transition: transform 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+      box-shadow: 5px 0 25px rgba(0,0,0,0.5);
+    }
+
+    .sidebar-overlay.active .sidebar {
+      transform: translateX(0);
+    }
+
+    .sidebar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #3f3f46;
+      padding-bottom: 12px;
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      background: #18181b;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border: 1px solid #3f3f46;
+    }
+
+    .menu-item:active {
+      background: #27272a;
+    }
+
+    .color-picker-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .color-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+
+    .color-dot.selected {
+      border-color: #fff;
+      scale: 1.1;
+    }
+
+    /* Модальное окно редактора игрока */
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -166,7 +334,7 @@
       display: flex;
       align-items: flex-end;
       justify-content: center;
-      z-index: 100;
+      z-index: 200;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.2s ease;
@@ -196,10 +364,6 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 16px;
-    }
-
-    .modal-header h2 {
-      font-size: 1.1rem;
     }
 
     .close-btn {
@@ -233,21 +397,16 @@
       outline: none;
     }
 
-    .form-group input:focus {
-      border-color: var(--accent-color);
-    }
-
-    /* Управление фото в редакторе */
     .photo-input-group {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
     .photo-preview {
-      width: 72px;
-      height: 72px;
+      width: 64px;
+      height: 64px;
       border-radius: 50%;
       border: 2px solid #3f3f46;
       background: #18181b;
@@ -265,25 +424,21 @@
 
     .photo-btns {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       width: 100%;
     }
 
     .action-btn {
       flex: 1;
-      padding: 10px;
+      padding: 8px;
       background: #3f3f46;
       color: #fff;
       border: none;
       border-radius: 8px;
       font-weight: 600;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       cursor: pointer;
       text-align: center;
-    }
-
-    .action-btn:active {
-      opacity: 0.8;
     }
 
     .save-btn {
@@ -301,13 +456,18 @@
 </head>
 <body>
 
+  <!-- Шапка -->
   <div class="header">
-    <h1>Тактическая схема (5 + 1)</h1>
-    <p>Двигайте фишки • Нажмите для редактирования</p>
+    <button class="icon-btn" id="openMenuBtn">☰</button>
+    <div class="header-title" style="text-align: center;">
+      <h1>Тактика 5+1</h1>
+      <span class="draw-indicator" id="drawIndicator">Режим рисования</span>
+    </div>
+    <button class="icon-btn" id="toggleDrawBtn">✏️</button>
   </div>
 
+  <!-- Поле -->
   <div class="pitch-container" id="pitch">
-    <!-- SVG разметка -->
     <svg class="pitch-lines" viewBox="0 0 100 150" preserveAspectRatio="none">
       <rect x="0" y="0" width="100" height="150" fill="none" stroke="var(--pitch-lines)" stroke-width="1.5" />
       <line x1="0" y1="75" x2="100" y2="75" stroke="var(--pitch-lines)" stroke-width="1.5" />
@@ -317,9 +477,50 @@
       <rect x="20" y="0" width="60" height="22" fill="none" stroke="var(--pitch-lines)" stroke-width="1.5" />
       <rect x="20" y="128" width="60" height="22" fill="none" stroke="var(--pitch-lines)" stroke-width="1.5" />
     </svg>
+
+    <!-- Холст для рисовки -->
+    <canvas id="drawingCanvas"></canvas>
   </div>
 
-  <!-- Модальное окно -->
+  <!-- Боковое меню -->
+  <div class="sidebar-overlay" id="sidebarOverlay">
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <h2>Инструменты</h2>
+        <button class="close-btn" id="closeSidebar">&times;</button>
+      </div>
+
+      <div class="menu-item" id="menuToggleBall">
+        <span>⚽ Мяч на поле</span>
+        <input type="checkbox" id="ballCheckbox" style="pointer-events: none;" />
+      </div>
+
+      <div class="menu-item" id="menuToggleDraw">
+        <span>✏️ Рисовать линии</span>
+        <input type="checkbox" id="drawCheckbox" style="pointer-events: none;" />
+      </div>
+
+      <div style="padding: 0 4px;">
+        <span style="font-size: 0.75rem; color: #a1a1aa; text-transform: uppercase;">Цвет кисти</span>
+        <div class="color-picker-group">
+          <div class="color-dot selected" style="background: #ffffff;" data-color="#ffffff"></div>
+          <div class="color-dot" style="background: #ef4444;" data-color="#ef4444"></div>
+          <div class="color-dot" style="background: #facc15;" data-color="#facc15"></div>
+          <div class="color-dot" style="background: #3b82f6;" data-color="#3b82f6"></div>
+        </div>
+      </div>
+
+      <div class="menu-item" id="menuClearCanvas" style="color: #f87171;">
+        <span>🗑️ Очистить рисунки</span>
+      </div>
+
+      <div class="menu-item" id="menuResetPositions">
+        <span>🔄 Сбросить фишки</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно редактирования игрока -->
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
       <div class="modal-header">
@@ -330,32 +531,30 @@
         <div class="form-group">
           <label>Фото</label>
           <div class="photo-input-group">
-            <div class="photo-preview" id="photoPreview">
+            <div class="photo-preview">
               <img src="" alt="preview" id="previewImg" style="display: none;"/>
-              <svg id="placeholderIcon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#52525b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <svg id="placeholderIcon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#52525b" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             </div>
             <div class="photo-btns">
-              <button type="button" class="action-btn" id="selectPhotoBtn">Выбрать</button>
+              <button type="button" class="action-btn" id="selectPhotoBtn">Из галереи</button>
               <button type="button" class="action-btn" id="removePhotoBtn" style="background: #ef4444; display: none;">Удалить</button>
             </div>
-            <!-- Скрытый инпут для выбора файла -->
             <input type="file" id="inputFilePhoto" accept="image/*" style="display: none;" />
-            <!-- Скрытое поле для хранения данных Base64 -->
             <input type="hidden" id="inputPhotoData" />
           </div>
         </div>
 
         <div class="form-group">
           <label>Имя</label>
-          <input type="text" id="inputFirstName" placeholder="Имя" required />
+          <input type="text" id="inputFirstName" required />
         </div>
         <div class="form-group">
           <label>Фамилия</label>
-          <input type="text" id="inputLastName" placeholder="Фамилия" required />
+          <input type="text" id="inputLastName" required />
         </div>
         <div class="form-group">
           <label>Игровой номер</label>
-          <input type="number" id="inputNumber" min="1" max="99" placeholder="Номер" required />
+          <input type="number" id="inputNumber" min="1" max="99" required />
         </div>
         <button type="submit" class="save-btn">Сохранить</button>
       </form>
@@ -363,12 +562,17 @@
   </div>
 
   <script>
+    // 1. Полноэкранный режим Telegram Mini App
     const tg = window.Telegram?.WebApp;
     if (tg) {
       tg.ready();
       tg.expand();
+      if (tg.requestFullscreen) {
+        tg.requestFullscreen();
+      }
     }
 
+    // Состояние приложения
     let players = [
       { id: 1, isGk: true,  x: 50, y: 88, firstName: 'Игорь', lastName: 'Акинфеев', number: 1, photo: '' },
       { id: 2, isGk: false, x: 25, y: 70, firstName: 'Игорь', lastName: 'Дивеев', number: 3, photo: '' },
@@ -378,26 +582,36 @@
       { id: 6, isGk: false, x: 75, y: 25, firstName: 'Алексей', lastName: 'Миранчук', number: 59, photo: '' }
     ];
 
+    let ball = { active: false, x: 50, y: 50 };
+    let isDrawingMode = false;
+    let currentColor = '#ffffff';
     let selectedPlayerId = null;
+
     const pitch = document.getElementById('pitch');
-    const modalOverlay = document.getElementById('modalOverlay');
-    const closeModalBtn = document.getElementById('closeModal');
-    const playerForm = document.getElementById('playerForm');
+    const canvas = document.getElementById('drawingCanvas');
+    const ctx = canvas.getContext('2d');
 
-    // Отрисовка фишек
-    function renderPlayers() {
-      document.querySelectorAll('.player-chip').forEach(el => el.remove());
+    // Настройка разрешения Canvas
+    function initCanvasSize() {
+      const rect = pitch.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+    }
+    window.addEventListener('resize', initCanvasSize);
 
+    // Отрисовка фишек игроков и мяча
+    function renderFieldElements() {
+      document.querySelectorAll('.player-chip, .ball-chip').forEach(el => el.remove());
+
+      // 1. Отрисовка игроков
       players.forEach(p => {
         const chip = document.createElement('div');
         chip.className = `player-chip ${p.isGk ? 'is-gk' : ''}`;
         chip.style.left = `${p.x}%`;
         chip.style.top = `${p.y}%`;
 
-        // Генерация аватара по умолчанию, если нет фото
         const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(p.firstName + ' ' + p.lastName)}&background=3f3f46&color=ffffff`;
 
-        // Измененная HTML-структура: номер убран с аватарки и помещен в chip-label слева от имени
         chip.innerHTML = `
           <div class="chip-avatar-wrapper">
             <img class="chip-avatar" src="${p.photo || defaultAvatar}" alt="photo" onerror="this.src='${defaultAvatar}'" />
@@ -408,73 +622,176 @@
           </div>
         `;
 
-        let isDragging = false;
-        let startX = 0, startY = 0;
-        let moved = false;
-
-        chip.addEventListener('pointerdown', (e) => {
-          isDragging = true;
-          moved = false;
-          startX = e.clientX;
-          startY = e.clientY;
-          chip.setPointerCapture(e.pointerId);
-        });
-
-        chip.addEventListener('pointermove', (e) => {
-          if (!isDragging) return;
-          const dx = Math.abs(e.clientX - startX);
-          const dy = Math.abs(e.clientY - startY);
-          if (dx > 4 || dy > 4) moved = true;
-
-          const rect = pitch.getBoundingClientRect();
-          let xPercent = ((e.clientX - rect.left) / rect.width) * 100;
-          let yPercent = ((e.clientY - rect.top) / rect.height) * 100;
-          xPercent = Math.max(5, Math.min(95, xPercent));
-          yPercent = Math.max(5, Math.min(95, yPercent));
-
-          p.x = xPercent;
-          p.y = yPercent;
-          chip.style.left = `${xPercent}%`;
-          chip.style.top = `${yPercent}%`;
-        });
-
-        chip.addEventListener('pointerup', (e) => {
-          if (!isDragging) return;
-          isDragging = false;
-          chip.releasePointerCapture(e.pointerId);
-          if (!moved) openEditModal(p.id);
-        });
-
+        setupDragAndClick(chip, p, () => openEditModal(p.id));
         pitch.appendChild(chip);
+      });
+
+      // 2. Отрисовка мяча
+      if (ball.active) {
+        const ballEl = document.createElement('div');
+        ballEl.className = 'ball-chip';
+        ballEl.innerText = '⚽';
+        ballEl.style.left = `${ball.x}%`;
+        ballEl.style.top = `${ball.y}%`;
+
+        setupDragAndClick(ballEl, ball);
+        pitch.appendChild(ballEl);
+      }
+    }
+
+    // Универсальная обработка перетаскивания (Drag & Drop)
+    function setupDragAndClick(element, itemState, onClickCallback) {
+      let isDragging = false;
+      let startX = 0, startY = 0;
+      let moved = false;
+
+      element.addEventListener('pointerdown', (e) => {
+        if (isDrawingMode) return; // В режиме рисования фишки заблокированы
+        isDragging = true;
+        moved = false;
+        startX = e.clientX;
+        startY = e.clientY;
+        element.setPointerCapture(e.pointerId);
+      });
+
+      element.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+        const dx = Math.abs(e.clientX - startX);
+        const dy = Math.abs(e.clientY - startY);
+        if (dx > 4 || dy > 4) moved = true;
+
+        const rect = pitch.getBoundingClientRect();
+        let xPercent = ((e.clientX - rect.left) / rect.width) * 100;
+        let yPercent = ((e.clientY - rect.top) / rect.height) * 100;
+
+        xPercent = Math.max(4, Math.min(96, xPercent));
+        yPercent = Math.max(4, Math.min(96, yPercent));
+
+        itemState.x = xPercent;
+        itemState.y = yPercent;
+        element.style.left = `${xPercent}%`;
+        element.style.top = `${yPercent}%`;
+      });
+
+      element.addEventListener('pointerup', (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        element.releasePointerCapture(e.pointerId);
+        if (!moved && onClickCallback) onClickCallback();
       });
     }
 
-    // Обработка выбора фото
+    // Логика рисования на холсте (Canvas)
+    let isDrawing = false;
+
+    function startDrawing(e) {
+      if (!isDrawingMode) return;
+      isDrawing = true;
+      const rect = canvas.getBoundingClientRect();
+      ctx.beginPath();
+      ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    }
+
+    function draw(e) {
+      if (!isDrawing || !isDrawingMode) return;
+      const rect = canvas.getBoundingClientRect();
+      ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+      ctx.strokeStyle = currentColor;
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+    }
+
+    function stopDrawing() {
+      isDrawing = false;
+    }
+
+    canvas.addEventListener('pointerdown', startDrawing);
+    canvas.addEventListener('pointermove', draw);
+    canvas.addEventListener('pointerup', stopDrawing);
+
+    function clearCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Переключение режима рисования
+    function setDrawingMode(active) {
+      isDrawingMode = active;
+      document.getElementById('drawCheckbox').checked = active;
+      canvas.classList.toggle('active', active);
+      document.getElementById('drawIndicator').classList.toggle('active', active);
+    }
+
+    document.getElementById('toggleDrawBtn').addEventListener('click', () => setDrawingMode(!isDrawingMode));
+    document.getElementById('menuToggleDraw').addEventListener('click', () => setDrawingMode(!isDrawingMode));
+
+    // Управление боковым меню
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    document.getElementById('openMenuBtn').addEventListener('click', () => sidebarOverlay.classList.add('active'));
+    document.getElementById('closeSidebar').addEventListener('click', () => sidebarOverlay.classList.remove('active'));
+    sidebarOverlay.addEventListener('click', (e) => {
+      if (e.target === sidebarOverlay) sidebarOverlay.classList.remove('active');
+    });
+
+    // Управление мячом
+    document.getElementById('menuToggleBall').addEventListener('click', () => {
+      ball.active = !ball.active;
+      document.getElementById('ballCheckbox').checked = ball.active;
+      renderFieldElements();
+    });
+
+    // Очистка и сброс
+    document.getElementById('menuClearCanvas').addEventListener('click', () => {
+      clearCanvas();
+      sidebarOverlay.classList.remove('active');
+    });
+
+    document.getElementById('menuResetPositions').addEventListener('click', () => {
+      const defaultCoords = [
+        { x: 50, y: 88 }, { x: 25, y: 70 }, { x: 75, y: 70 },
+        { x: 50, y: 50 }, { x: 25, y: 25 }, { x: 75, y: 25 }
+      ];
+      players.forEach((p, i) => { p.x = defaultCoords[i].x; p.y = defaultCoords[i].y; });
+      ball.x = 50; ball.y = 50;
+      renderFieldElements();
+      sidebarOverlay.classList.remove('active');
+    });
+
+    // Выбор цвета кисти
+    document.querySelectorAll('.color-dot').forEach(dot => {
+      dot.addEventListener('click', (e) => {
+        document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
+        e.target.classList.add('selected');
+        currentColor = e.target.dataset.color;
+      });
+    });
+
+    // Работа с модальным окном игрока и фото
+    const modalOverlay = document.getElementById('modalOverlay');
+    const playerForm = document.getElementById('playerForm');
     const inputFilePhoto = document.getElementById('inputFilePhoto');
     const inputPhotoData = document.getElementById('inputPhotoData');
     const previewImg = document.getElementById('previewImg');
     const placeholderIcon = document.getElementById('placeholderIcon');
     const removePhotoBtn = document.getElementById('removePhotoBtn');
-    const selectPhotoBtn = document.getElementById('selectPhotoBtn');
 
-    selectPhotoBtn.addEventListener('click', () => inputFilePhoto.click());
+    document.getElementById('selectPhotoBtn').addEventListener('click', () => inputFilePhoto.click());
 
     inputFilePhoto.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
-
       const reader = new FileReader();
       reader.onload = (event) => {
-        const base64String = event.target.result;
-        inputPhotoData.value = base64String;
-        updatePreview(base64String);
+        inputPhotoData.value = event.target.result;
+        updatePreview(event.target.result);
       };
-      reader.readAsDataURL(file); // Читает файл как Base64
+      reader.readAsDataURL(file);
     });
 
     removePhotoBtn.addEventListener('click', () => {
       inputPhotoData.value = '';
-      inputFilePhoto.value = ''; // Сброс инпута файла
+      inputFilePhoto.value = '';
       updatePreview('');
     });
 
@@ -501,7 +818,7 @@
       document.getElementById('inputLastName').value = player.lastName;
       document.getElementById('inputNumber').value = player.number;
       inputPhotoData.value = player.photo;
-      inputFilePhoto.value = ''; // Сброс выбранного файла при открытии другого игрока
+      inputFilePhoto.value = '';
 
       updatePreview(player.photo);
       modalOverlay.classList.add('active');
@@ -512,10 +829,8 @@
       selectedPlayerId = null;
     }
 
-    closeModalBtn.addEventListener('click', closeModal);
-    modalOverlay.addEventListener('click', (e) => {
-      if (e.target === modalOverlay) closeModal();
-    });
+    document.getElementById('closeModal').addEventListener('click', closeModal);
+    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
 
     playerForm.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -526,14 +841,16 @@
         players[idx].firstName = document.getElementById('inputFirstName').value.trim();
         players[idx].lastName = document.getElementById('inputLastName').value.trim();
         players[idx].number = parseInt(document.getElementById('inputNumber').value, 10);
-        players[idx].photo = inputPhotoData.value; // Сохраняем Base64 строку в данные игрока
+        players[idx].photo = inputPhotoData.value;
 
-        renderPlayers();
+        renderFieldElements();
         closeModal();
       }
     });
 
-    renderPlayers();
+    // Первичная инициализация
+    setTimeout(initCanvasSize, 100);
+    renderFieldElements();
   </script>
 </body>
 </html>
